@@ -19,14 +19,18 @@ pipeline {
               sh 'docker build -t nombre-imagen .'
             }
         }
-         stage('login to openshift') {
-            steps {
-                    openshift.withCluster( 'https://ec2-100-26-153-236.compute-1.amazonaws.com:8443', 'Y1KUsDAJgnc_OmVsyMuS4W3PehLZOgtN51uJgElWPSU' ) {
-                        openshift.withProject( 'myproject' ) {
-                            echo "Hello from project ${openshift.project()} in cluster ${openshift.cluster()}"
-                        }
+      
+        stage('login to openshift') {
+                    steps {
+                        script {
+                            openshift.withCluster( 'https://ec2-100-26-153-236.compute-1.amazonaws.com:8443', 'Y1KUsDAJgnc_OmVsyMuS4W3PehLZOgtN51uJgElWPSU' ) {
+                                    openshift.withProject( 'myproject' ) {
+                                        echo "Hello from project ${openshift.project()} in cluster ${openshift.cluster()}"
+                                    }
+                                }
+                            }
                     }
-            }
+                    
         }
         stage('Desplegar en OpenShift') {
             steps {
