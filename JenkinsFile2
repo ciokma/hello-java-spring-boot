@@ -17,31 +17,15 @@ pipeline {
         stage('Crear imagen Docker') {
             steps {
               sh 'docker build -t nombre-imagen .'
+              sh 'docker image save -o nombre-imagen.tar local'
             }
         }
       
-        stage('login to openshift') {
-                    steps {
-                        script {
-                            openshift.withCluster( 'https://ec2-100-26-153-236.compute-1.amazonaws.com:8443', 'Y1KUsDAJgnc_OmVsyMuS4W3PehLZOgtN51uJgElWPSU' ) {
-                                    openshift.withProject( 'coe-devops' ) {
-                                        echo "Hello from project ${openshift.project()} in cluster ${openshift.cluster()}"
-                                        def created = openshift.newApp( 'https://github.com/ciokma/hello-java-spring-boot.git' )
-
-                                        // This Selector exposes the same operations you have already seen.
-                                        // (And many more that you haven't!).
-                                        echo "new-app created ${created.count()} objects named: ${created.names()}"
-                                        created.describe()
-                                    }
-                                }
-                            }
-                    }
-                    
-        }
+        
         stage('Desplegar en OpenShift') {
             steps {
               sh '''
-                    oc login --username=admin --password=admin --server=https://ec2-100-26-153-236.compute-1.amazonaws.com:8443
+                    oc login --token=Y1KUsDAJgnc_OmVsyMuS4W3PehLZOgtN51uJgElWPSU --server=https://ec2-100-26-153-236.compute-1.amazonaws.com:8443
                     oc project coe-devops
                     oc new-app nombre-imagen
                   '''
