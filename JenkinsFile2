@@ -41,9 +41,8 @@ pipeline {
         stage('Desplegar en OpenShift') {
             steps {
               sh '''
-                    oc login --token=Y1KUsDAJgnc_OmVsyMuS4W3PehLZOgtN51uJgElWPSU --server=https://ec2-100-26-153-236.compute-1.amazonaws.com:8443
-                    oc project coe-devops
-                    oc new-app nombre-imagen.tar --strategy=docker
+		    oc login --token=Y1KUsDAJgnc_OmVsyMuS4W3PehLZOgtN51uJgElWPSU --server=https://ec2-100-26-153-236.compute-1.amazonaws.com:8443
+		    oc new-app ciokma/springboot:latest --name springboot
                   '''
              }
         }
