@@ -1,0 +1,42 @@
+// Based on:
+// https://raw.githubusercontent.com/redhat-cop/container-pipelines/master/basic-spring-boot/Jenkinsfile
+
+library identifier: "pipeline-library@v1.5",
+retriever: modernSCM(
+  [
+    $class: "GitSCMSource",
+    remote: "https://github.com/redhat-cop/pipeline-library.git"
+  ]
+)
+
+// The name you want to give your Spring Boot application
+// Each resource related to your app will be given this name
+appName = "hello-java-spring-boot"
+
+pipeline {
+    // Use the 'maven' Jenkins agent image which is provided with OpenShift 
+    agent any
+    stages {
+    
+        stage('Construir aplicación') {
+          steps {
+            // Puedes elegir Maven o Gradle según tu proyecto
+            sh 'mvn clean package'
+          }
+        }
+        stage('Crear imagen Docker') {
+            steps {
+              sh 'docker build -t nombre-imagen .'
+            }
+        }
+        stage('Desplegar en OpenShift') {
+            steps {
+              sh '''
+                    oc login --username=admin --password=admin --server=https://ec2-18-234-253-225.compute-1.amazonaws.com:8443
+                    oc project coe-devops
+                    oc new-app nombre-imagen
+                  '''
+             }
+        }
+    }
+}
