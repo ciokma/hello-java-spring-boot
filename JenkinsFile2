@@ -6,6 +6,9 @@ appName = "hello-java-spring-boot"
 pipeline {
     // Use the 'maven' Jenkins agent image which is provided with OpenShift 
     agent any
+    environment {
+		DOCKERHUB_CREDENTIALS=credentials('dockerhub-cred')
+	}
     stages {
     
         stage('Construir aplicación') {
@@ -16,11 +19,24 @@ pipeline {
         }
         stage('Crear imagen Docker') {
             steps {
-              sh 'docker build -t nombre-imagen .'
-              sh 'docker image save -o nombre-imagen.tar nombre-imagen'
+              sh 'docker build -t ciokma/springboot:latest .'
+              sh 'docker image save -o ciokma-springboot-latest.tar ciokma/springboot:latest'
+              
             }
         }
-      
+       stage('Login dockerhub') {
+
+			steps {
+				sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+			}
+		}
+
+		stage('Push to dockerhub') {
+
+			steps {
+				sh 'docker push ciokma/springboot:latest'
+			}
+		}
         
         stage('Desplegar en OpenShift') {
             steps {
