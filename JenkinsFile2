@@ -41,7 +41,7 @@ pipeline {
         stage('Desplegar en OpenShift') {
             steps {
               sh '''
-		    oc login --token=Y1KUsDAJgnc_OmVsyMuS4W3PehLZOgtN51uJgElWPSU --server=https://ec2-100-26-153-236.compute-1.amazonaws.com:8443 --insecure-skip-tls-verify
+		    oc login --token=kMpcdg7ThlPQo5tkaC-9gDEXI7F_AO-6l8BLiWt7wXQ --server=https://ec2-54-224-88-191.compute-1.amazonaws.com:8443 --insecure-skip-tls-verify
 		    oc new-app ciokma/springboot:latest --name springboot
 		    oc expose svc springboot --name=springboot
                   '''
