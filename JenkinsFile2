@@ -50,9 +50,10 @@ pipeline {
        }
         stage('Build and Push Docker Image to Nexus') {
 	  steps {
-		  sh "docker login -u $NEXUSDOCKER_CREDENTIALS_USR -p $NEXUSDOCKER_CREDENTIALS_PSW $NEXUS_SERVER:8085"
-		  sh "docker build . -t $NEXUS_SERVER:8085/springboot:${currentBuild.number}"
-		  sh "docker push $NEXUS_SERVER:8085/springboot:${currentBuild.number}"
+		echo "docker login -u $NEXUSDOCKER_CREDENTIALS_USR -p $NEXUSDOCKER_CREDENTIALS_PSW ${NEXUS_SERVER}:8085"
+		  sh "docker login -u $NEXUSDOCKER_CREDENTIALS_USR -p $NEXUSDOCKER_CREDENTIALS_PSW ${NEXUS_SERVER}:8085"
+		  sh "docker build . -t ${NEXUS_SERVER}:8085/springboot:${currentBuild.number}"
+		  sh "docker push ${NEXUS_SERVER}:8085/springboot:${currentBuild.number}"
 		  
 	  }
        }
