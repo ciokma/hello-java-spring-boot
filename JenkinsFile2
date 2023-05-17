@@ -32,7 +32,7 @@ pipeline {
 	  steps {
    		   nexusArtifactUploader artifacts: [[artifactId: '01-springboot',
 					       classifier: '',
-					       file: 'target/registration-login-demo-0.0.1-SNAPSHOT.jar',
+					       file: 'target/hello-java-spring-boot-0.0.1-SNAPSHOT.jar',
 					       type: 'jar']],
 		    credentialsId: 'nexus-credentials',
 		    groupId: 'springboot',
