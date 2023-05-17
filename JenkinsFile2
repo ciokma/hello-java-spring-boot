@@ -86,7 +86,7 @@ pipeline {
         }
 		   stage('Limpiar Docker Image') {
             steps {
-              sh "docker rmi $(docker images | grep 'ciokma/springboot:latest')"
+              sh 'docker rmi $(docker images | grep "ciokma/springboot:latest")'
                   
              }
         }
