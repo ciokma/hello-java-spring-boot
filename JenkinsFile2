@@ -4,14 +4,18 @@
 
 // The name you want to give your Spring Boot application
 // Each resource related to your app will be given this name
-appName = "hello-java-spring-boot"
+
 
 pipeline {
     // Use the 'maven' Jenkins agent image which is provided with OpenShift 
     agent any
     environment {
 		DOCKERHUB_CREDENTIALS=credentials('dockerhub-cred')
-	    	NEXUSDOCKER_CREDENTIALS=credentials('nexusdocker-cred')
+	    NEXUSDOCKER_CREDENTIALS=credentials('nexusdocker-cred')
+		APP_NAME = "hello-java-spring-boot"
+		NEXUS_SERVER="172.31.30.2"
+		OPENSHIFT_SERVER="172.31.51.224"
+		OC_TOKEN="JOByoxpQJSMJ3quJzH4lGAYRdcsmPEoGkTF-NKMDGUs"
 	}
     stages {
     
@@ -22,6 +26,7 @@ pipeline {
           }
         }
         stage('Crear imagen Docker') {
+
             steps {
               sh 'docker build -t ciokma/springboot:latest .'
               sh 'docker image save -o ciokma-springboot-latest.tar ciokma/springboot:latest'
@@ -29,25 +34,25 @@ pipeline {
             }
         }
         stage('Upload Artifact to Nexus') {
-	  steps {
-   		   nexusArtifactUploader artifacts: [[artifactId: '01-springboot',
-					       classifier: '',
-					       file: 'target/hello-java-spring-boot-0.0.1-SNAPSHOT.jar',
-					       type: 'jar']],
-		    credentialsId: 'nexus-credentials',
-		    groupId: 'springboot',
-		    nexusUrl: '18.215.183.175:8081',
-		    nexusVersion: 'nexus3',
-		    protocol: 'http',
-		    repository: 'spring-ms-app',
-		    version: "${currentBuild.number}"		  
-	  }
+			steps {
+				nexusArtifactUploader artifacts: [[artifactId: '01-springboot',
+								classifier: '',
+								file: 'target/hello-java-spring-boot-0.0.1-SNAPSHOT.jar',
+								type: 'jar']],
+					credentialsId: 'nexus-credentials',
+					groupId: 'springboot',
+					nexusUrl: $NEXUS_SERVER + ":" + "8081",
+					nexusVersion: 'nexus3',
+					protocol: 'http',
+					repository: 'spring-ms-app',
+					version: "${currentBuild.number}"		  
+			}
        }
         stage('Build and Push Docker Image to Nexus') {
 	  steps {
-		  sh 'docker login -u $NEXUSDOCKER_CREDENTIALS_USR -p $NEXUSDOCKER_CREDENTIALS_PSW ec2-18-215-183-175.compute-1.amazonaws.com:8085'
-		  sh "docker build . -t ec2-18-215-183-175.compute-1.amazonaws.com:8085/springboot:${currentBuild.number}"
-		  sh "docker push ec2-18-215-183-175.compute-1.amazonaws.com:8085/springboot:${currentBuild.number}"
+		  sh "docker login -u $NEXUSDOCKER_CREDENTIALS_USR -p $NEXUSDOCKER_CREDENTIALS_PSW $NEXUS_SERVER:8085"
+		  sh "docker build . -t $NEXUS_SERVER:8085/springboot:${currentBuild.number}"
+		  sh "docker push $NEXUS_SERVER:8085/springboot:${currentBuild.number}"
 		  
 	  }
        }
@@ -61,19 +66,20 @@ pipeline {
 	stage('Push to dockerhub') {
 
 		steps {
-			sh 'docker push ciokma/springboot:latest'		}
+			sh 'docker push ciokma/springboot:latest'
+			}
 	}
         
         stage('Desplegar en OpenShift') {
             steps {
               sh '''
-		    oc login --token=JOByoxpQJSMJ3quJzH4lGAYRdcsmPEoGkTF-NKMDGUs --server=ec2-100-26-133-68.compute-1.amazonaws.com:8443 --insecure-skip-tls-verify
+		    oc login --token=$OC_TOKEN --server=$OPENSHIFT_SERVER:8443 --insecure-skip-tls-verify
 		    oc delete all -l app=springboot
 		    oc new-app ciokma/springboot:latest --name springboot
 		    
 		    
 		  '''
-		   // sh "oc new-app ec2-18-215-183-175.compute-1.amazonaws.com:8085/springboot:${currentBuild.number} --name springboot"
+		   // sh "oc new-app $NEXUS_SERVER:8085/springboot:${currentBuild.number} --name springboot"
 		   sh 'oc expose svc springboot --name=springboot'
                   
              }
