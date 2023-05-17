@@ -88,6 +88,8 @@ pipeline {
 		stage('Limpiar Docker Image') {
             steps {
               sh 'docker rmi ciokma/springboot'
+              sh "docker rmi ${NEXUS_SERVER}:8085/springboot:${currentBuild.number}"
+
                   
              }
         }
