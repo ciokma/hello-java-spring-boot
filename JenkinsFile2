@@ -89,7 +89,10 @@ pipeline {
             steps {
               sh 'docker rmi ciokma/springboot'
               sh "docker rmi ${NEXUS_SERVER}:8085/springboot:${currentBuild.number}"
-			  sh "docker rmi ${docker images -f dangling=true -q}"
+			  //sh "docker rmi ${docker images -f dangling=true -q}"
+			  sh '''
+					docker rmi $(docker images -aq --filter dangling=true)
+           	  '''
 
                   
              }
