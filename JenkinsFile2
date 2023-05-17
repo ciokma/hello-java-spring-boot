@@ -41,7 +41,7 @@ pipeline {
 								type: 'jar']],
 					credentialsId: 'nexus-credentials',
 					groupId: 'springboot',
-					nexusUrl: $NEXUS_SERVER + ":" + "8081",
+					nexusUrl: "${NEXUS_SERVER}" + ":" + "8081",
 					nexusVersion: 'nexus3',
 					protocol: 'http',
 					repository: 'spring-ms-app',
