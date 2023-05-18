@@ -14,7 +14,7 @@ pipeline {
 	    NEXUSDOCKER_CREDENTIALS=credentials('nexusdocker-cred')
 		APP_NAME = "hello-java-spring-boot"
 		NEXUS_SERVER="172.31.30.2"
-		OPENSHIFT_SERVER="172.31.51.224"
+		OPENSHIFT_SERVER="172.31.26.197"
 		OC_TOKEN="JOByoxpQJSMJ3quJzH4lGAYRdcsmPEoGkTF-NKMDGUs"
 	}
     stages {
