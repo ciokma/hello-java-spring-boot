@@ -16,6 +16,8 @@ pipeline {
 		NEXUS_SERVER="172.31.30.2"
 		OPENSHIFT_SERVER="172.31.87.120"
 		OC_TOKEN="y_1MjvtL9d3zYj-A5NsAXtfUVv3XZEsxI0tPrxiHtJ4"
+		ARTIFACT_ID="01-springboot"
+		APP_JAR_PATH="hello-java-spring-boot-0.0.1-SNAPSHOT.jar"
 	}
     stages {
     
@@ -35,9 +37,9 @@ pipeline {
         }
         stage('Upload Artifact to Nexus') {
 			steps {
-				nexusArtifactUploader artifacts: [[artifactId: '01-springboot',
+				nexusArtifactUploader artifacts: [[artifactId: "${ARTIFACT_ID}",
 								classifier: '',
-								file: 'target/hello-java-spring-boot-0.0.1-SNAPSHOT.jar',
+								file: "target/${APP_JAR_PATH}",
 								type: 'jar']],
 					credentialsId: 'nexus-credentials',
 					groupId: 'springboot',
@@ -45,7 +47,7 @@ pipeline {
 					nexusVersion: 'nexus3',
 					protocol: 'http',
 					repository: 'spring-ms-app',
-					version: "${currentBuild.number}"		  
+					version: "${BUILD_NUMBER}"		  
 			}
        }
         stage('Build and Push Docker Image to Nexus') {
