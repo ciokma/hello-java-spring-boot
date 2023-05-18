@@ -14,7 +14,7 @@ pipeline {
 	    NEXUSDOCKER_CREDENTIALS=credentials('nexusdocker-cred')
 		APP_NAME = "hello-java-spring-boot"
 		NEXUS_SERVER="172.31.30.2"
-		OPENSHIFT_SERVER="172.31.26.197"
+		OPENSHIFT_SERVER="172.31.87.120"
 		OC_TOKEN="y_1MjvtL9d3zYj-A5NsAXtfUVv3XZEsxI0tPrxiHtJ4"
 	}
     stages {
@@ -76,11 +76,11 @@ pipeline {
               sh '''
 		    oc login --token=$OC_TOKEN --server=$OPENSHIFT_SERVER:8443 --insecure-skip-tls-verify
 		    oc delete all -l app=springboot
-		    #oc new-app ciokma/springboot:latest --name springboot
+		    oc new-app ciokma/springboot:latest --name springboot
 		    
 		    
 		  '''
-		   sh "oc new-app $NEXUS_SERVER:8085/springboot:${currentBuild.number} --name springboot"
+		   # sh "oc new-app $NEXUS_SERVER:8085/springboot:${currentBuild.number} --name springboot"
 		   sh 'oc expose svc springboot --name=springboot'
                   
              }
