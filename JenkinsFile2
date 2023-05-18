@@ -15,7 +15,7 @@ pipeline {
 		APP_NAME = "hello-java-spring-boot"
 		NEXUS_SERVER="172.31.30.2"
 		OPENSHIFT_SERVER="172.31.26.197"
-		OC_TOKEN="JOByoxpQJSMJ3quJzH4lGAYRdcsmPEoGkTF-NKMDGUs"
+		OC_TOKEN="y_1MjvtL9d3zYj-A5NsAXtfUVv3XZEsxI0tPrxiHtJ4"
 	}
     stages {
     
