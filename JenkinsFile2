@@ -95,10 +95,10 @@ pipeline {
             steps {
                 echo "Inicia BuildImage"
                 script {
-                    def ocDir = tool "oc-client"
-                    echo "${ocDir}"
+                    //def ocDir = tool "oc-client"
+                    //echo "${ocDir}"
 
-                    withEnv(["PATH=${ocDir}:$PATH"]) {
+                    //withEnv(["PATH=${ocDir}:$PATH"]) {
 
                         sh "oc login --token=$OC_TOKEN --server=$OPENSHIFT_SERVER --insecure-skip-tls-verify"
 
@@ -117,7 +117,7 @@ pipeline {
                         sh "oc start-build ${OPENSHIFT_APP_NAME} --from-file=./target/${nameJar} --wait=true -n ${OPENSHIFT_NAMESPACE_DEV}"
                         sh "oc tag ${OPENSHIFT_APP_NAME}:latest ${OPENSHIFT_APP_NAME}:${tagImage} -n ${OPENSHIFT_NAMESPACE_DEV}"
 
-                    }
+                    //}
                 }
                 echo "Termina BuildImage"
             }
