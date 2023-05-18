@@ -80,7 +80,7 @@ pipeline {
 		    
 		    
 		  '''
-		   # sh "oc new-app $NEXUS_SERVER:8085/springboot:${currentBuild.number} --name springboot"
+		   // sh "oc new-app $NEXUS_SERVER:8085/springboot:${currentBuild.number} --name springboot"
 		   sh 'oc expose svc springboot --name=springboot'
                   
              }
