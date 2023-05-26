@@ -73,7 +73,7 @@ pipeline {
                         echo "${tagImage}"
                         echo "${nameJar}"
                         //set
-                        sh "oc new-build --binary=true  --strategy=source --name='${OPENSHIFT_APP_NAME}' --image-stream=${OPENSHIFT_IMAGE_NAME} -n ${OPENSHIFT_NAMESPACE_DEV}"
+                        sh "oc new-build --binary=true  --strategy=source --name='${OPENSHIFT_APP_NAME}' --image-stream=${OPENSHIFT_IMAGE_NAME} --allow-missing-imagestream-tags -n ${OPENSHIFT_NAMESPACE_DEV}"
                         //start build
                         sh "oc start-build ${OPENSHIFT_APP_NAME} --from-file=./target/${nameJar} --wait=true -n ${OPENSHIFT_NAMESPACE_DEV}"
                         sh "oc tag ${OPENSHIFT_APP_NAME}:latest ${OPENSHIFT_APP_NAME}:${tagImage} -n ${OPENSHIFT_NAMESPACE_DEV}"
