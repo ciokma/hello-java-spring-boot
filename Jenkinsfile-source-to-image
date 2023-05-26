@@ -14,8 +14,8 @@ pipeline {
 	    NEXUSDOCKER_CREDENTIALS=credentials('nexusdocker-cred')
 		APP_NAME = "hello-java-spring-boot"
 		NEXUS_SERVER="172.31.30.2"
-		OPENSHIFT_SERVER="172.31.87.120:8443"
-		OC_TOKEN="y_1MjvtL9d3zYj-A5NsAXtfUVv3XZEsxI0tPrxiHtJ4"
+		OPENSHIFT_SERVER="172.31.27.112:8443"
+		OC_TOKEN="y62sWUSqvchbWZJwYAqWkII2dG3hrnFhDBpiJ36h5Fc"
 		ARTIFACT_ID="01-springboot"
 		APP_JAR_PATH="hello-java-spring-boot-0.0.1-SNAPSHOT.jar"
 
@@ -53,55 +53,19 @@ pipeline {
 					version: "${BUILD_NUMBER}"		  
 			}
        }
-        stage('Build and Push Docker Image to Nexus') {
-	  steps {
-		echo "docker login -u $NEXUSDOCKER_CREDENTIALS_USR -p $NEXUSDOCKER_CREDENTIALS_PSW ${NEXUS_SERVER}:8085"
-		  sh "docker login -u $NEXUSDOCKER_CREDENTIALS_USR -p $NEXUSDOCKER_CREDENTIALS_PSW ${NEXUS_SERVER}:8085"
-		  sh "docker build . -t ${NEXUS_SERVER}:8085/springboot:${currentBuild.number}"
-		  sh "docker push ${NEXUS_SERVER}:8085/springboot:${currentBuild.number}"
-		  
-	  }
-       }
-       stage('Login to dockerhub') {
 
-		steps {
-			sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
-		}
-	}
-
-	stage('Push to dockerhub') {
-
-		steps {
-			sh 'docker push ciokma/springboot:latest'
-			}
-	}
-        /*
-        stage('Desplegar en OpenShift') {
-            steps {
-              sh '''
-		    oc login --token=$OC_TOKEN --server=$OPENSHIFT_SERVER --insecure-skip-tls-verify
-		    oc delete all -l app=$OPENSHIFT_APP_NAME
-		    oc new-app ciokma/springboot:latest --name springboot
-		    
-		    
-		  '''
-		   // sh "oc new-app $NEXUS_SERVER:8085/springboot:${currentBuild.number} --name $OPENSHIFT_APP_NAME"
-		   sh "oc expose svc springboot --name=$OPENSHIFT_APP_NAME"
-                  
-             }
-        }
-	*/
-	
-        stage('Build Image oc') {
+	  stage('Build Image') {
             steps {
                 echo "Inicia BuildImage"
                 script {
-                    //def ocDir = tool "oc-client"
-                    //echo "${ocDir}"
-
-                    //withEnv(["PATH=${ocDir}:$PATH"]) {
-
-                        sh "oc login --token=$OC_TOKEN --server=$OPENSHIFT_SERVER --insecure-skip-tls-verify"
+           
+                        
+                       sh "oc login --token=${OC_TOKEN} ${OPENSHIFT_SERVER} --insecure-skip-tls-verify=true"
+                       sh "oc project ${OPENSHIFT_NAMESPACE_DEV}" 
+                       sh "oc delete bc/${OPENSHIFT_APP_NAME} --ignore-not-found=true -n ${OPENSHIFT_NAMESPACE_DEV}"
+                       sh "oc delete is/${OPENSHIFT_APP_NAME} --ignore-not-found=true -n ${OPENSHIFT_NAMESPACE_DEV}"
+                       sh "oc delete dc/${OPENSHIFT_APP_NAME} --ignore-not-found=true -n ${OPENSHIFT_NAMESPACE_DEV}"
+                       sh "oc delete all -l app=${OPENSHIFT_APP_NAME} -n ${OPENSHIFT_NAMESPACE_DEV}"
 
                          //Obtener version del artefacto 
                         def pom = readMavenPom file: 'pom.xml'
@@ -114,60 +78,31 @@ pipeline {
 
                         echo "${tagImage}"
                         echo "${nameJar}"
-
+                        //set
+                        sh "oc new-build --binary=true  --strategy=source --name='${OPENSHIFT_APP_NAME}' --image-stream=${OPENSHIFT_IMAGE_NAME} -n ${OPENSHIFT_NAMESPACE_DEV}"
+                        //start build
                         sh "oc start-build ${OPENSHIFT_APP_NAME} --from-file=./target/${nameJar} --wait=true -n ${OPENSHIFT_NAMESPACE_DEV}"
                         sh "oc tag ${OPENSHIFT_APP_NAME}:latest ${OPENSHIFT_APP_NAME}:${tagImage} -n ${OPENSHIFT_NAMESPACE_DEV}"
-
-                    //}
                 }
                 echo "Termina BuildImage"
             }
         }
-
-	 stage('Deploy to OC Dev') {
+      
+     // Deploy image
+        stage('Deploy to OC') {
             steps {
-                echo "Deploying container image to OC"
+                echo "Inicia DeployImage"
                 script {
-                
-                    def ocDir = tool "oc-client"
-                    echo "${ocDir}"
-
-                    withEnv(["PATH=${ocDir}:$PATH"]) {
-                        sh "oc login --token=$OC_TOKEN --server=$OPENSHIFT_SERVER --insecure-skip-tls-verify"
-                        sh "oc delete cm ${OPENSHIFT_APP_NAME}-config --ignore-not-found=true -n ${OPENSHIFT_NAMESPACE_DEV}"
-                        
-                      
-                        sh "oc create cm ${OPENSHIFT_APP_NAME}-config --from-file=./src/main/resources/application.properties  -n ${OPENSHIFT_NAMESPACE_DEV}"
-						
-					
-                      
-                        sh "oc set image dc/${OPENSHIFT_APP_NAME} ${OPENSHIFT_APP_NAME}=${OPENSHIFT_NAMESPACE_DEV}/${OPENSHIFT_APP_NAME}:${tagImage} --source=imagestreamtag -n ${OPENSHIFT_NAMESPACE_DEV}"
-                        sh "oc rollout latest dc/${OPENSHIFT_APP_NAME} -n ${OPENSHIFT_NAMESPACE_DEV}"
-						sh "oc scale dc ${OPENSHIFT_APP_NAME} --replicas=1 -n ${OPENSHIFT_NAMESPACE_DEV}"
-
-                        def dc_version = sh(script: "oc get dc/${OPENSHIFT_APP_NAME} -o=yaml -n ${OPENSHIFT_NAMESPACE_DEV} | grep 'latestVersion'| cut -d':' -f 2", returnStdout: true).trim();
-                        echo "Version de DeploymentConfig Actual ${dc_version}"
-
-                        def rc_replicas = sh(returnStdout: true, script: "oc get rc/${OPENSHIFT_APP_NAME}-${dc_version} -o yaml -n ${OPENSHIFT_NAMESPACE_DEV} |grep -A 5  'status:' |grep 'replicas:' | cut -d ':' -f2").trim()
-                        def rc_replicas_ready = sh(returnStdout: true, script: "oc get rc/${OPENSHIFT_APP_NAME}-${dc_version} -o yaml -n ${OPENSHIFT_NAMESPACE_DEV} |grep -A 5  'status:' |grep 'readyReplicas:' | cut -d ':' -f2").trim()
-
-                        echo "Replicas Deseadas ${rc_replicas} - Replicas Listas ${rc_replicas_ready}"
-
-                    }
+                        //new app
+                        sh "oc new-app ${OPENSHIFT_NAMESPACE_DEV}/${OPENSHIFT_APP_NAME}:latest --name=${OPENSHIFT_APP_NAME} --allow-missing-imagestream-tags=true -n ${OPENSHIFT_NAMESPACE_DEV}"
+                        sh "oc set resources dc ${OPENSHIFT_APP_NAME} --limits=memory=200Mi,cpu=100m --requests=memory=100Mi,cpu=50m -n ${OPENSHIFT_NAMESPACE_DEV}"
+                        sh "oc set env dc/${OPENSHIFT_APP_NAME} TZ=America/Santo_Domingo -n ${OPENSHIFT_NAMESPACE_DEV}"
+                        //sh "oc expose dc ${OPENSHIFT_APP_NAME} --port ${OPENSHIFT_MS_PORT} -n ${OPENSHIFT_NAMESPACE_DEV}"
+                        sh "oc create route edge --service=${OPENSHIFT_APP_NAME} -n ${OPENSHIFT_NAMESPACE_DEV}"
                 }
+                echo "Termina Deploy"
             }
         }
-		stage('Limpiar Docker Image') {
-            steps {
-              sh 'docker rmi ciokma/springboot'
-              sh "docker rmi ${NEXUS_SERVER}:8085/springboot:${currentBuild.number}"
-			  //sh "docker rmi ${docker images -f dangling=true -q}"
-			  sh '''
-					docker rmi $(docker images -aq --filter dangling=true)
-           	  '''
-
-                  
-             }
-        }
+	 
     }
 }
